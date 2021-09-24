@@ -1,5 +1,5 @@
 AppLauncherWindow, QWidget {
-  background: rgb(50, 50, 55);
+  background: rgb(40, 40, 45);
 }
 
 QScrollArea {
