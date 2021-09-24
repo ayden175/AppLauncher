@@ -14,6 +14,7 @@ class AppLauncherWindow(QMainWindow):
 
         self.normal_button = int(height * 0.35)
         self.small_button = int(height * 0.1)
+        self.buttons = 2 * [None]
 
         self.setWindowTitle("App Launcher")
         self.showMaximized()
@@ -32,12 +33,29 @@ class AppLauncherWindow(QMainWindow):
 
         self.setCentralWidget(self.main_screen)
 
+        self.buttons[0][0].setFocus()
+
+    def keyPressEventButton(self, event, row, index):
+        key = event.key()
+
+        if key == Qt.Key_Left and index > 0:
+            self.buttons[row][index-1].setFocus()
+        elif key == Qt.Key_Right and index < len(self.buttons[row]) - 1:
+            self.buttons[row][index+1].setFocus()
+        elif key == Qt.Key_Up and row == 1:
+            self.buttons[row-1][self.last_index].setFocus()
+            self.last_index = index
+        elif key == Qt.Key_Down and row == 0:
+            self.buttons[row+1][self.last_index].setFocus()
+            self.last_index = index
+
     def statusWindow(self):
         window = QWidget()
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 50)
-        font = QFont('SansSerif', 30)
+        font = QFont('SansSerif', 50)
         self.clock = QLabel()
+        self.clock.setStyleSheet("color: rgb(240, 240, 240);")
         self.clock.setAlignment(Qt.AlignCenter)
         self.clock.setFont(font)
         layout.addWidget(self.clock)
@@ -69,11 +87,13 @@ class AppLauncherWindow(QMainWindow):
             ('img/dummy.jpg', '')
         ]
 
+        self.buttons[0] = []
         i = 0
         for app in apps:
             button_icon = QIcon(QPixmap(app[0]))
-            button = AppButton(button_icon, '', self.normal_button)
+            button = AppButton(button_icon, '', self.normal_button, i, self.keyPressEventButton)
             button.clicked.connect(partial(self.buttonClicked, 0, i, app[1]))
+            self.buttons[0].append(button)
             layout.addWidget(button)
             i += 1
 
@@ -95,11 +115,15 @@ class AppLauncherWindow(QMainWindow):
             ('img/power.png', '')
         ]
 
+        self.buttons[1] = []
+        i = 0
         for app in apps:
             button_icon = QIcon(QPixmap(app[0]))
-            button = SettingButton(button_icon, '', self.small_button)
+            button = SettingButton(button_icon, '', self.small_button, i, self.keyPressEventButton)
             button.clicked.connect(partial(self.buttonClicked, 1, 0, app[1]))
+            self.buttons[1].append(button)
             layout.addWidget(button)
+            i += 1
 
         window.setLayout(layout)
         return window

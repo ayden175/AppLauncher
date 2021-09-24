@@ -1,3 +1,7 @@
+AppLauncherWindow, QWidget {
+  background: rgb(50, 50, 55);
+}
+
 QScrollArea {
   border: none;
 }
