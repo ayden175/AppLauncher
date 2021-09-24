@@ -1,1 +1,1 @@
-from .app import AppLauncherApp
+from .window import AppLauncherWindow

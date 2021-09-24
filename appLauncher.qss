@@ -1,0 +1,30 @@
+QScrollArea {
+  border: none;
+}
+
+AppButton {
+  border: none;
+  border-radius: 7;
+  background: none;
+}
+
+AppButton:hover, AppButton:focus {
+  border: 5px solid rgb(100, 200, 255);
+}
+
+AppButton:pressed {
+  border: 5px solid white;
+}
+
+SettingButton {
+  border: none;
+  background: none;
+}
+
+SettingButton:hover, SettingButton:focus {
+  border: 5px solid rgb(100, 200, 255);
+}
+
+SettingButton:pressed {
+  border: 5px solid white;
+}

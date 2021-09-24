@@ -1,27 +1,16 @@
 import sys
 
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
+from PyQt5.QtWidgets import QApplication
 
-
-# Subclass QMainWindow to customize your application's main window
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("My App")
-        #self.showFullScreen()
-        self.showMaximized()
-        button = QPushButton("Press Me!")
-
-        # Set the central widget of the Window.
-        self.setCentralWidget(button)
-
+from applauncher import AppLauncherWindow
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    size = app.primaryScreen().size()
 
-    window = MainWindow()
+    window = AppLauncherWindow(size.width(), size.height())
+    with open('appLauncher.qss', 'r') as file:
+        window.setStyleSheet(file.read())
     window.show()
 
     app.exec()
