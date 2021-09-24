@@ -75,7 +75,7 @@ class AppLauncherWindow(QMainWindow):
         scroll = QScrollArea()
         window = QWidget()
         layout = QHBoxLayout()
-        layout.setContentsMargins(100, 0, 100, 0)
+        layout.setContentsMargins(self.normal_button/2, 0, self.normal_button/2, 0)
 
         apps = [
             ('img/youtube.png', 'firefox -kiosk www.youtube.com/tv'),
