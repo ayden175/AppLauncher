@@ -40,9 +40,7 @@ class AppLauncherWindow(QMainWindow):
         if key == Qt.Key_Left and index > 0:
             new_button = self.buttons[row][index-1]
             new_button.setFocus()
-            # pos = new_button.pos().x()
             pos = new_button.mapToGlobal(QPoint(0, 0)).x()
-            print(pos)
             if pos < 0:
                 scroll_bar = self.scroll.horizontalScrollBar()
                 scroll_bar.setValue(scroll_bar.value() - (self.normal_button + 6))
@@ -50,9 +48,7 @@ class AppLauncherWindow(QMainWindow):
         elif key == Qt.Key_Right and index < len(self.buttons[row]) - 1:
             new_button = self.buttons[row][index+1]
             new_button.setFocus()
-            # pos = new_button.pos().x()
             pos = new_button.mapToGlobal(QPoint(0, 0)).x()
-            print(pos)
             if pos + self.normal_button > self.width:
                 scroll_bar = self.scroll.horizontalScrollBar()
                 scroll_bar.setValue(scroll_bar.value() + (self.normal_button + 6))
@@ -124,7 +120,7 @@ class AppLauncherWindow(QMainWindow):
     def settingWindow(self):
         window = QWidget()
         layout = QHBoxLayout()
-        layout.setContentsMargins(200, 0, 200, 0)
+        layout.setContentsMargins(self.width/3, 0, self.width/3, 0)
 
         apps = [
             ('img/bluetooth.png', ''),

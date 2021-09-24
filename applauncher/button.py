@@ -2,29 +2,28 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtGui import QPixmap, QIcon
 
-
-class AppButton(QPushButton):
-    def __init__(self, icon, text, size, index, keyPressFunc):
+class IconButton(QPushButton):
+    def __init__(self, icon, text, size, offset, row, index, keyPressFunc):
         super().__init__(icon, '')
 
-        self.setIconSize(QSize(size - 18, size - 18))
+        self.setIconSize(QSize(size - offset, size - offset))
         self.setFixedSize(QSize(size, size))
+        self.row = row
         self.index = index
         self.keyPressFunc = keyPressFunc
 
     def keyPressEvent(self, event):
-        self.keyPressFunc(event, 0, self.index)
+        if event.key() ==  Qt.Key_Space:
+            super().keyPressEvent(event)
+        else:
+            self.keyPressFunc(event, self.row, self.index)
 
-class SettingButton(QPushButton):
+class AppButton(IconButton):
     def __init__(self, icon, text, size, index, keyPressFunc):
-        super().__init__(icon, '')
+        super().__init__(icon, text, size, 18, 0, index, keyPressFunc)
 
-        self.setIconSize(QSize(size - 10, size - 10))
-        self.setFixedSize(QSize(size, size))
-        #bababa hex code icon
+class SettingButton(IconButton):
+    def __init__(self, icon, text, size, index, keyPressFunc):
+        super().__init__(icon, text, size, 10, 1, index, keyPressFunc)
+        
         self.setStyleSheet(f"border-radius: {int(size/2)};")
-        self.index = index
-        self.keyPressFunc = keyPressFunc
-
-    def keyPressEvent(self, event):
-        self.keyPressFunc(event, 1, self.index)
