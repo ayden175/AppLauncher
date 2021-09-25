@@ -43,21 +43,35 @@ class SettingsWidget(QWidget):
     def getButtons(self):
         return self.buttons
 
-class PowerMenu(QWidget):
-    def __init__(self, parent):
+class PopUp(QWidget):
+    def __init__(self, parent, content):
         super().__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAttribute(Qt.WA_StyledBackground)
         self.setAutoFillBackground(True)
 
-        full_layout = QVBoxLayout(self)
-        full_layout.setContentsMargins(0,0,0,0)
-        full_layout.setSpacing(0)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(0)
         self.container = QWidget(autoFillBackground=True, objectName='container')
-        full_layout.addWidget(self.container, alignment=Qt.AlignCenter)
+        layout.addWidget(self.container, alignment=Qt.AlignCenter)
         self.container.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
-        layout = QVBoxLayout(self.container)
+        self.container.setLayout(content)
+        self.loop = QEventLoop(self)
+
+    def showEvent(self, event):
+        self.setGeometry(self.parent().rect())
+
+    def exec(self):
+        self.show()
+        self.raise_()
+        self.loop.exec_()
+        self.hide()
+
+class PowerMenu(PopUp):
+    def __init__(self, parent):
+        layout = QVBoxLayout()
         layout.setContentsMargins(0,35,0,0)
         layout.setSpacing(30)
 
@@ -82,7 +96,8 @@ class PowerMenu(QWidget):
         layout.addWidget(title)
         layout.addWidget(button_box)
 
-        self.loop = QEventLoop(self)
+        super().__init__(parent, layout)
+
         cancel.setFocus()
 
     def cancel(self):
@@ -93,18 +108,11 @@ class PowerMenu(QWidget):
             os.system('reboot')
         else:
             print('triggered: reboot')
+            self.loop.quit()
 
     def shutdown(self):
         if not cfg.DEV_MODE:
             os.system('shutdown now')
         else:
             print('triggered: shutdown now')
-
-    def showEvent(self, event):
-        self.setGeometry(self.parent().rect())
-
-    def exec(self):
-        self.show()
-        self.raise_()
-        self.loop.exec_()
-        self.hide()
+            self.loop.quit()
