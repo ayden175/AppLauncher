@@ -1,34 +1,51 @@
-AppLauncherWindow, QWidget {
+QWidget {
   background: rgb(40, 40, 45);
+}
+
+QLabel {
+  background: none;
+  color: rgb(240, 240, 240);
 }
 
 QScrollArea {
   border: none;
 }
 
+IconButton {
+  border: none;
+  background: none;
+}
+
 AppButton {
-  border: none;
   border-radius: 7;
-  background: none;
 }
 
-AppButton:hover, AppButton:focus {
+IconButton:focus {
   border: 5px solid rgb(100, 200, 255);
 }
 
-AppButton:pressed {
+IconButton:pressed {
   border: 5px solid white;
 }
 
-SettingButton {
+DialogButton {
   border: none;
   background: none;
+  border-radius: 8;
 }
 
-SettingButton:hover, SettingButton:focus {
-  border: 5px solid rgb(100, 200, 255);
+DialogButton:focus {
+  border: 4px solid rgb(100, 200, 255);
 }
 
-SettingButton:pressed {
-  border: 5px solid white;
+DialogButton:pressed {
+  border: 4px solid white;
+}
+
+PowerMenu {
+  background: rgba(0, 0, 5, 235);
+}
+
+QWidget#container, QWidget#container > QWidget{
+  background: rgb(55, 55, 55);
 }

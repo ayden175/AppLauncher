@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QHBoxLayout,
 from PyQt5.QtGui import QPixmap, QIcon, QFont
 
 from .button import *
+from .settings import SettingsWidget
 
 class AppLauncherWindow(QMainWindow):
     def __init__(self, width, height):
@@ -14,24 +15,25 @@ class AppLauncherWindow(QMainWindow):
 
         self.width = width
         self.normal_button = int(height * 0.35)
-        self.small_button = int(height * 0.08)
         self.buttons = 2 * [None]
 
         self.setWindowTitle("App Launcher")
         self.showMaximized()
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        # self.setWindowFlags(Qt.FramelessWindowHint)
 
         self.main_screen = QWidget()
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(self.main_screen)
         layout.addWidget(self.statusWindow())
         layout.addWidget(self.appWindow())
-        layout.addWidget(self.settingWindow())
+        settingsWidget = SettingsWidget(width, height, self.keyPressEventButton)
+        layout.addWidget(settingsWidget)
         layout.setContentsMargins(0, 50, 0, 50)
-        self.main_screen.setLayout(layout)
+
         self.current_row = 0
         self.last_index = 0
 
         self.setCentralWidget(self.main_screen)
+        self.buttons[1] = settingsWidget.getButtons()
         self.buttons[0][0].setFocus()
 
     def keyPressEventButton(self, event, row, index):
@@ -40,18 +42,12 @@ class AppLauncherWindow(QMainWindow):
         if key == Qt.Key_Left and index > 0:
             new_button = self.buttons[row][index-1]
             new_button.setFocus()
-            pos = new_button.mapToGlobal(QPoint(0, 0)).x()
-            if pos < 0:
-                scroll_bar = self.scroll.horizontalScrollBar()
-                scroll_bar.setValue(scroll_bar.value() - (self.normal_button + 6))
+            self.ensureButtonVisible(new_button)
 
         elif key == Qt.Key_Right and index < len(self.buttons[row]) - 1:
             new_button = self.buttons[row][index+1]
             new_button.setFocus()
-            pos = new_button.mapToGlobal(QPoint(0, 0)).x()
-            if pos + self.normal_button > self.width:
-                scroll_bar = self.scroll.horizontalScrollBar()
-                scroll_bar.setValue(scroll_bar.value() + (self.normal_button + 6))
+            self.ensureButtonVisible(new_button)
 
         elif key == Qt.Key_Up and row == 1:
             self.buttons[row-1][self.last_index].setFocus()
@@ -61,9 +57,17 @@ class AppLauncherWindow(QMainWindow):
             self.buttons[row+1][self.last_index].setFocus()
             self.last_index = index
 
+    def ensureButtonVisible(self, button):
+        pos = button.mapToGlobal(QPoint(0, 0)).x()
+        scroll_bar = self.scroll.horizontalScrollBar()
+        if pos < 0:
+            scroll_bar.setValue(scroll_bar.value() - (self.normal_button + 6))
+        elif pos + self.normal_button > self.width:
+            scroll_bar.setValue(scroll_bar.value() + (self.normal_button + 6))
+
     def statusWindow(self):
         window = QWidget()
-        layout = QVBoxLayout()
+        layout = QVBoxLayout(window)
         layout.setContentsMargins(0, 0, 0, 50)
         font = QFont('SansSerif', 50)
         self.clock = QLabel()
@@ -71,7 +75,6 @@ class AppLauncherWindow(QMainWindow):
         self.clock.setAlignment(Qt.AlignCenter)
         self.clock.setFont(font)
         layout.addWidget(self.clock)
-        window.setLayout(layout)
         timer = QTimer(self)
         timer.timeout.connect(self.showTime)
         timer.start(1000)
@@ -86,60 +89,35 @@ class AppLauncherWindow(QMainWindow):
     def appWindow(self):
         scroll = QScrollArea()
         window = QWidget()
-        layout = QHBoxLayout()
+        layout = QHBoxLayout(window)
         layout.setContentsMargins(self.normal_button/1.92, 0, self.normal_button/1.92, 0)
 
         apps = [
-            ('img/youtube.png', 'firefox -kiosk www.youtube.com/tv'),
-            ('img/viki.png', 'firefox -kiosk www.viki.com'),
-            ('img/dummy.jpg', ''),
-            ('img/dummy.jpg', ''),
-            ('img/dummy.jpg', ''),
-            ('img/dummy.jpg', ''),
-            ('img/dummy.jpg', '')
+            ('img/youtube.png', 'YouTube', 'firefox -kiosk www.youtube.com/tv'),
+            ('img/viki.png', 'Viki', 'firefox -kiosk www.viki.com'),
+            ('img/dummy.jpg', 'Empty', ''),
+            ('img/dummy.jpg', 'Empty', ''),
+            ('img/dummy.jpg', 'Empty', ''),
+            ('img/dummy.jpg', 'Empty', '')
         ]
 
         self.buttons[0] = []
         i = 0
         for app in apps:
-            button_icon = QIcon(QPixmap(app[0]))
-            button = AppButton(button_icon, '', self.normal_button, i, self.keyPressEventButton)
-            button.clicked.connect(partial(self.buttonClicked, 0, i, app[1]))
+            image, title, command = app
+            button_icon = QIcon(QPixmap(image))
+            button = AppButton(button_icon, title, self.normal_button, i, self.keyPressEventButton)
+            button.clicked.connect(partial(self.buttonClicked, 0, i, command))
             self.buttons[0].append(button)
             layout.addWidget(button)
             i += 1
 
-        window.setLayout(layout)
         scroll.setWidget(window)
         scroll.setAlignment(Qt.AlignVCenter)
         scroll.horizontalScrollBar().hide()
         scroll.setFixedHeight(self.normal_button + 30)
         self.scroll = scroll
         return scroll
-
-    def settingWindow(self):
-        window = QWidget()
-        layout = QHBoxLayout()
-        layout.setContentsMargins(self.width/3, 0, self.width/3, 0)
-
-        apps = [
-            ('img/bluetooth.png', ''),
-            ('img/settings.png', ''),
-            ('img/power.png', '')
-        ]
-
-        self.buttons[1] = []
-        i = 0
-        for app in apps:
-            button_icon = QIcon(QPixmap(app[0]))
-            button = SettingButton(button_icon, '', self.small_button, i, self.keyPressEventButton)
-            button.clicked.connect(partial(self.buttonClicked, 1, 0, app[1]))
-            self.buttons[1].append(button)
-            layout.addWidget(button)
-            i += 1
-
-        window.setLayout(layout)
-        return window
 
     def buttonClicked(self, row, index, command):
         print(f'Clicked button {index}')
