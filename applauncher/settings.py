@@ -1,6 +1,7 @@
 import sys
 import os
 from functools import partial
+import subprocess
 
 from PyQt5.QtCore import QSize, Qt, QEventLoop, QPoint
 from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QSizePolicy
@@ -18,6 +19,7 @@ class SettingsWidget(QWidget):
 
         apps = [
             ('img/bluetooth.png', self.doNothing),
+            ('img/update.png', self.updateMenu),
             ('img/settings.png', self.doNothing),
             ('img/power.png', self.powerMenu)
         ]
@@ -32,8 +34,13 @@ class SettingsWidget(QWidget):
             layout.addWidget(button)
             i += 1
 
-    def doNothing(self):
+    def doNothing(self, button):
         print('Not implemented yet!')
+
+    def updateMenu(self, button):
+        pop_up = UpdateMenu(cfg.main_window)
+        pop_up.exec()
+        button.setFocus()
 
     def powerMenu(self, button):
         pop_up = PowerMenu(cfg.main_window)
@@ -68,6 +75,42 @@ class PopUp(QWidget):
         self.raise_()
         self.loop.exec_()
         self.hide()
+
+class UpdateMenu(PopUp):
+    def __init__(self, parent):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0,35,0,0)
+        layout.setSpacing(30)
+
+        self.title = QLabel('Do you want to search for updates?', alignment=Qt.AlignCenter)
+        font = QFont('SansSerif', 20)
+        self.title.setFont(font)
+
+        button_box = QWidget()
+        button_layout = QHBoxLayout(button_box)
+        button_layout.setContentsMargins(0,0,0,0)
+        button_layout.setSpacing(0)
+        yes = DialogButton('Yes', -1)
+        cancel = DialogButton('Cancel', 1)
+        yes.clicked.connect(self.yes)
+        cancel.clicked.connect(self.cancel)
+        button_layout.addWidget(yes)
+        button_layout.addWidget(cancel)
+
+        layout.addWidget(self.title)
+        layout.addWidget(button_box)
+
+        super().__init__(parent, layout)
+
+        cancel.setFocus()
+
+    def yes(self):
+        out = subprocess.check_output(['pacman', '-Syu'])
+        self.title.setText(out)
+
+    def cancel(self):
+        self.loop.quit()
+
 
 class PowerMenu(PopUp):
     def __init__(self, parent):
