@@ -4,7 +4,7 @@ from functools import partial
 import subprocess
 
 from PyQt5.QtCore import QSize, Qt, QEventLoop, QPoint
-from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QSizePolicy
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QSizePolicy, QFrame
 from PyQt5.QtGui import QPixmap, QIcon, QFont
 
 from .button import SettingButton, DialogButton
@@ -51,12 +51,13 @@ class SettingsWidget(QWidget):
         return self.buttons
 
 class PopUp(QWidget):
-    def __init__(self, parent, content):
+    def __init__(self, parent, text, buttons):
         super().__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setAttribute(Qt.WA_StyledBackground)
         self.setAutoFillBackground(True)
 
+        # create container for pop up
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(0)
@@ -64,7 +65,31 @@ class PopUp(QWidget):
         layout.addWidget(self.container, alignment=Qt.AlignCenter)
         self.container.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
-        self.container.setLayout(content)
+        # create layout for content
+        layout = QVBoxLayout(self.container)
+        layout.setContentsMargins(0,0,0,0)
+        width = int(cfg.main_window.width / 3.5)
+
+        # create text
+        text_container = QWidget()
+        text_container.setFixedWidth(width)
+        text_layout = QVBoxLayout(text_container)
+        text_layout.setContentsMargins(35,35,35,30)
+        text.setWordWrap(True)
+        font = QFont('SansSerif', 20)
+        text.setFont(font)
+        text_layout.addWidget(text)
+        layout.addWidget(text_container)
+
+        # create button layout and add buttons
+        button_box = QWidget()
+        self.button_layout = QHBoxLayout(button_box)
+        self.button_layout.setContentsMargins(0,0,0,0)
+        self.button_layout.setSpacing(0)
+        for button in buttons:
+            self.button_layout.addWidget(button)
+        layout.addWidget(button_box)
+
         self.loop = QEventLoop(self)
 
     def showEvent(self, event):
@@ -78,72 +103,60 @@ class PopUp(QWidget):
 
 class UpdateMenu(PopUp):
     def __init__(self, parent):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0,35,0,0)
-        layout.setSpacing(30)
-
         self.title = QLabel('Do you want to search for updates?', alignment=Qt.AlignCenter)
-        font = QFont('SansSerif', 20)
-        self.title.setFont(font)
 
-        button_box = QWidget()
-        button_layout = QHBoxLayout(button_box)
-        button_layout.setContentsMargins(0,0,0,0)
-        button_layout.setSpacing(0)
-        yes = DialogButton('Yes', -1)
-        cancel = DialogButton('Cancel', 1)
-        yes.clicked.connect(self.yes)
-        cancel.clicked.connect(self.cancel)
-        button_layout.addWidget(yes)
-        button_layout.addWidget(cancel)
+        self.width = int(cfg.main_window.width / 3.5)
+        self.cancel = DialogButton('Cancel', self.width/2, 60, -1)
+        self.yes = DialogButton('Yes', self.width/2, 60, 1)
+        self.cancel.clicked.connect(self.close)
+        self.yes.clicked.connect(self.check_updates)
+        buttons = [self.cancel, self.yes]
 
-        layout.addWidget(self.title)
-        layout.addWidget(button_box)
+        super().__init__(parent, self.title, buttons)
+        self.cancel.setFocus()
 
-        super().__init__(parent, layout)
-
-        cancel.setFocus()
-
-    def yes(self):
+    def check_updates(self):
         out = subprocess.check_output(['pacman', '-Syu'])
-        self.title.setText(out)
+        out = out.decode('utf-8')
+        if 'there is nothing to do' in out:
+            self.title.setText('Your system is already up to date.')
+            self.ok_button()
+        else:
+            self.title.setText('There are updates available. Do you want to update now?')
+            self.yes.clicked.connect(self.update)
 
-    def cancel(self):
+    def update(self):
+        self.title.setText('Update successful (TODO)')
+        self.ok_button()
+
+    def close(self):
         self.loop.quit()
 
+    def ok_button(self):
+        self.button_layout.removeWidget(self.yes)
+        self.yes.deleteLater()
+        self.yes = None
+        self.cancel.setText('Ok')
+        self.cancel.setWidth(self.width)
+        self.cancel.setFocus()
 
 class PowerMenu(PopUp):
     def __init__(self, parent):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0,35,0,0)
-        layout.setSpacing(30)
+        title = QLabel('Please select a shutdown option.', alignment=Qt.AlignCenter)
 
-        title = QLabel('Select a shutdown option', alignment=Qt.AlignCenter)
-        font = QFont('SansSerif', 20)
-        title.setFont(font)
-
-        button_box = QWidget()
-        button_layout = QHBoxLayout(button_box)
-        button_layout.setContentsMargins(0,0,0,0)
-        button_layout.setSpacing(0)
-        cancel = DialogButton('Cancel', -1)
-        reboot = DialogButton('Reboot', 0)
-        shutdown = DialogButton('Power Off', 1)
-        cancel.clicked.connect(self.cancel)
+        width = int(cfg.main_window.width / 3.5)
+        cancel = DialogButton('Cancel', width/3, 60, -1)
+        reboot = DialogButton('Reboot', width/3, 60, 0)
+        shutdown = DialogButton('Power Off', width/3, 60, 1)
+        cancel.clicked.connect(self.close)
         reboot.clicked.connect(self.reboot)
         shutdown.clicked.connect(self.shutdown)
-        button_layout.addWidget(cancel)
-        button_layout.addWidget(reboot)
-        button_layout.addWidget(shutdown)
+        buttons = [cancel, reboot, shutdown]
 
-        layout.addWidget(title)
-        layout.addWidget(button_box)
-
-        super().__init__(parent, layout)
-
+        super().__init__(parent, title, buttons)
         cancel.setFocus()
 
-    def cancel(self):
+    def close(self):
         self.loop.quit()
 
     def reboot(self):

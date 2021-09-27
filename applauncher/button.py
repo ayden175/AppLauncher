@@ -35,13 +35,17 @@ class SettingButton(IconButton):
         self.setStyleSheet(f"border-radius: {int(size/2)};")
 
 class DialogButton(QPushButton):
-    def __init__(self, text, pos):
+    def __init__(self, text, width, height, pos):
         super().__init__(text)
-        self.setFixedSize(QSize(170, 60))
-        font = QFont('SansSerif', 15)
+        self.setFixedSize(QSize(width, height))
+        font = QFont('SansSerif', 16)
         self.setFont(font)
         # pos: -1 left most, 1 right most, 0 otherwise
         self.pos = pos
+        self.height = height
+
+    def setWidth(self, width):
+        self.setFixedSize(QSize(width, self.height))
 
     def keyPressEvent(self, event):
         if (event.key() ==  Qt.Key_Space or
