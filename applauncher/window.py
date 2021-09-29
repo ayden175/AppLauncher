@@ -1,6 +1,7 @@
 import sys
 import os
 from functools import partial
+import subprocess
 
 from PyQt5.QtCore import QSize, Qt, QTimer, QTime, QPoint
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QSplitter,  QLabel, QScrollArea
@@ -17,9 +18,9 @@ class AppLauncherWindow(QMainWindow):
         self.normal_button = int(height * 0.35)
         self.buttons = 2 * [None]
 
-        self.setWindowTitle("App Launcher")
+        self.setWindowTitle("AppLauncher - HomeScreen")
         self.showMaximized()
-        # self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.FramelessWindowHint)
 
         self.main_screen = QWidget()
         layout = QVBoxLayout(self.main_screen)
@@ -93,12 +94,12 @@ class AppLauncherWindow(QMainWindow):
         layout.setContentsMargins(self.normal_button/1.92, 0, self.normal_button/1.92, 0)
 
         apps = [
-            ('img/youtube.png', 'YouTube', 'firefox -kiosk www.youtube.com/tv'),
-            ('img/viki.png', 'Viki', 'firefox -kiosk www.viki.com'),
-            ('img/dummy.jpg', 'Empty', ''),
-            ('img/dummy.jpg', 'Empty', ''),
-            ('img/dummy.jpg', 'Empty', ''),
-            ('img/dummy.jpg', 'Empty', '')
+            ('img/youtube.png', 'YouTube', ['firefox', '--kiosk', 'www.youtube.com/tv']),
+            ('img/viki.png', 'Viki', ['firefox', '--kiosk', 'www.viki.com']),
+            ('img/dummy.jpg', 'Empty', None),
+            ('img/dummy.jpg', 'Empty', None),
+            ('img/dummy.jpg', 'Empty', None),
+            ('img/dummy.jpg', 'Empty', None)
         ]
 
         self.buttons[0] = []
@@ -121,4 +122,5 @@ class AppLauncherWindow(QMainWindow):
 
     def buttonClicked(self, row, index, command):
         print(f'Clicked button {index}')
-        os.system(command)
+        if command is not None:
+            self.active = subprocess.Popen(command)

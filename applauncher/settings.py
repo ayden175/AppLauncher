@@ -106,8 +106,8 @@ class UpdateMenu(PopUp):
         self.title = QLabel('Do you want to search for updates?', alignment=Qt.AlignCenter)
 
         self.width = int(cfg.main_window.width / 3.5)
-        self.cancel = DialogButton('Cancel', self.width/2, 60, -1)
-        self.yes = DialogButton('Yes', self.width/2, 60, 1)
+        self.cancel = DialogButton('Cancel', self.width/2, 60, -1, 'cancel')
+        self.yes = DialogButton('Yes', self.width/2, 60, 1, 'ok')
         self.cancel.clicked.connect(self.close)
         self.yes.clicked.connect(self.check_updates)
         buttons = [self.cancel, self.yes]
@@ -143,23 +143,25 @@ class UpdateMenu(PopUp):
         self.loop.quit()
 
     def ok_button(self, funct=None):
-        self.button_layout.removeWidget(self.yes)
-        self.yes.deleteLater()
-        self.yes = None
-        self.cancel.setText('Ok')
-        self.cancel.setWidth(self.width)
-        self.cancel.setFocus()
+        self.button_layout.removeWidget(self.cancel)
+        self.cancel.deleteLater()
+        self.cancel = None
+        self.yes.setText('Ok')
+        self.yes.setWidth(self.width)
+        self.yes.setFocus()
         if funct is not None:
-            self.canclel.clicked.connect(funct)
+            self.yes.clicked.connect(funct)
+        else:
+            self.yes.clicked.connect(self.close)
 
 class PowerMenu(PopUp):
     def __init__(self, parent):
         title = QLabel('Please select a shutdown option.', alignment=Qt.AlignCenter)
 
         width = int(cfg.main_window.width / 3.5)
-        cancel = DialogButton('Cancel', width/3, 60, -1)
-        reboot = DialogButton('Reboot', width/3, 60, 0)
-        shutdown = DialogButton('Power Off', width/3, 60, 1)
+        cancel = DialogButton('Cancel', width/3, 60, -1, 'cancel')
+        reboot = DialogButton('Reboot', width/3, 60, 0, 'ok')
+        shutdown = DialogButton('Power Off', width/3, 60, 1, 'ok')
         cancel.clicked.connect(self.close)
         reboot.clicked.connect(self.reboot)
         shutdown.clicked.connect(self.shutdown)

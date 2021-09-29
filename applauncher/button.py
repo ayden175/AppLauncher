@@ -1,3 +1,5 @@
+from playsound import playsound
+
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtGui import QPixmap, QIcon, QFont
@@ -5,13 +7,14 @@ from PyQt5.QtGui import QPixmap, QIcon, QFont
 import applauncher.config as cfg
 
 class IconButton(QPushButton):
-    def __init__(self, icon, text, size, offset, row, index, keyPressFunc):
+    def __init__(self, icon, text, size, offset, row, index, sound, keyPressFunc):
         super().__init__(icon, '')
 
         self.setIconSize(QSize(size - offset, size - offset))
         self.setFixedSize(QSize(size, size))
         self.row = row
         self.index = index
+        self.sound = sound
         self.keyPressFunc = keyPressFunc
 
     def enterEvent(self, event):
@@ -21,21 +24,26 @@ class IconButton(QPushButton):
 
     def keyPressEvent(self, event):
         if event.key() ==  Qt.Key_Space:
+            #playsound('sounds/'+self.sound+'.mp3')
+            print('Press 1')
             super().keyPressEvent(event)
-        else:
+            print('Press 2')
+        elif (event.key() == Qt.Key_Left or event.key() == Qt.Key_Right or
+              event.key() == Qt.Key_Up   or event.key() == Qt.Key_Down):
+            playsound('sounds/switch.mp3')
             self.keyPressFunc(event, self.row, self.index)
 
 class AppButton(IconButton):
     def __init__(self, icon, text, size, index, keyPressFunc):
-        super().__init__(icon, text, size, 18, 0, index, keyPressFunc)
+        super().__init__(icon, text, size, 18, 0, index, 'start', keyPressFunc)
 
 class SettingButton(IconButton):
     def __init__(self, icon, text, size, index, keyPressFunc):
-        super().__init__(icon, text, size, 10, 1, index, keyPressFunc)
+        super().__init__(icon, text, size, 10, 1, index, 'ok', keyPressFunc)
         self.setStyleSheet(f"border-radius: {int(size/2)};")
 
 class DialogButton(QPushButton):
-    def __init__(self, text, width, height, pos):
+    def __init__(self, text, width, height, pos, sound):
         super().__init__(text)
         self.setFixedSize(QSize(width, height))
         font = QFont('SansSerif', 16)
@@ -43,12 +51,18 @@ class DialogButton(QPushButton):
         # pos: -1 left most, 1 right most, 0 otherwise
         self.pos = pos
         self.height = height
+        self.sound = sound
 
     def setWidth(self, width):
         self.setFixedSize(QSize(width, self.height))
 
     def keyPressEvent(self, event):
-        if (event.key() ==  Qt.Key_Space or
-            event.key() == Qt.Key_Left and self.pos != -1 or
+        if event.key() == Qt.Key_Left or event.key() == Qt.Key_Right:
+            playsound('sounds/switch.mp3')
+        #elif event.key() == Qt.Key_Space:
+            #playsound('sounds/'+self.sound+'.mp3')
+
+        if (event.key() == Qt.Key_Space or
+            event.key() == Qt.Key_Left  and self.pos != -1 or
             event.key() == Qt.Key_Right and self.pos != 1):
             super().keyPressEvent(event)
