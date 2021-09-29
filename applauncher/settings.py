@@ -116,29 +116,41 @@ class UpdateMenu(PopUp):
         self.cancel.setFocus()
 
     def check_updates(self):
-        out = subprocess.check_output(['pacman', '-Syu'])
-        out = out.decode('utf-8')
-        if 'there is nothing to do' in out:
+        try:
+            subprocess.check_output(['pamac', 'checkupdates'])
+            updates = False
+        except subprocess.CalledProcessError as e:
+            out = e.output.decode('utf-8')
+            updates = True
+
+        if updates:
+            self.title.setText(f"{out.partition(':')[0]}. Do you want to update now? The system will restart after the update.")
+            self.yes.clicked.connect(self.update)
+        else:
             self.title.setText('Your system is already up to date.')
             self.ok_button()
-        else:
-            self.title.setText('There are updates available. Do you want to update now?')
-            self.yes.clicked.connect(self.update)
 
     def update(self):
-        self.title.setText('Update successful (TODO)')
-        self.ok_button()
+        self.title.setText('Updating, please wait...')
+        subprocess.call(['pamac', 'update'])
+        self.title.setText('Update successful, system will restart now.')
+        if not cfg.DEV_MODE:
+            self.ok_button(funct=partial.functools(subprocess.call, ['reboot']))
+        else:
+            self.ok_button()
 
     def close(self):
         self.loop.quit()
 
-    def ok_button(self):
+    def ok_button(self, funct=None):
         self.button_layout.removeWidget(self.yes)
         self.yes.deleteLater()
         self.yes = None
         self.cancel.setText('Ok')
         self.cancel.setWidth(self.width)
         self.cancel.setFocus()
+        if funct is not None:
+            self.canclel.clicked.connect(funct)
 
 class PowerMenu(PopUp):
     def __init__(self, parent):
