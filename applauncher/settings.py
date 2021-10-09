@@ -4,7 +4,7 @@ from functools import partial
 import subprocess
 
 from PyQt5.QtCore import QSize, Qt, QEventLoop, QPoint
-from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QSizePolicy, QFrame
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QSizePolicy, QFrame, qApp
 from PyQt5.QtGui import QPixmap, QIcon, QFont
 
 from .button import SettingButton, DialogButton
@@ -125,6 +125,7 @@ class UpdateMenu(PopUp):
 
         if updates:
             self.title.setText(f"{out.partition(':')[0]}. Do you want to update now? The system will restart after the update.")
+            self.yes.clicked.disconnect()
             self.yes.clicked.connect(self.update)
         else:
             self.title.setText('Your system is already up to date.')
@@ -132,10 +133,13 @@ class UpdateMenu(PopUp):
 
     def update(self):
         self.title.setText('Updating, please wait...')
-        subprocess.call(['pamac', 'update'])
+        qApp.processEvents()
+        p = subprocess.Popen(['pamac', 'update'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+        p.stdin.write('y'.encode())
+        p.communicate()
         self.title.setText('Update successful, system will restart now.')
         if not cfg.DEV_MODE:
-            self.ok_button(funct=partial.functools(subprocess.call, ['reboot']))
+            self.ok_button(funct=partial(subprocess.call, ['reboot']))
         else:
             self.ok_button()
 
@@ -149,6 +153,7 @@ class UpdateMenu(PopUp):
         self.yes.setText('Ok')
         self.yes.setWidth(self.width)
         self.yes.setFocus()
+        self.yes.clicked.disconnect()
         if funct is not None:
             self.yes.clicked.connect(funct)
         else:
