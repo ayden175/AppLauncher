@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QLab
 from PyQt5.QtGui import QPixmap, QIcon, QFont
 
 from .button import SettingButton, DialogButton
+from .popup import PopUp
 import applauncher.config as cfg
 
 class SettingsWidget(QWidget):
@@ -18,7 +19,7 @@ class SettingsWidget(QWidget):
         layout.setContentsMargins(width/3, 0, width/3, 0)
 
         apps = [
-            ('img/bluetooth.png', self.doNothing),
+            ('img/bluetooth.png', self.bluetoothMenu),
             ('img/update.png', self.updateMenu),
             ('img/settings.png', self.doNothing),
             ('img/power.png', self.powerMenu)
@@ -37,6 +38,11 @@ class SettingsWidget(QWidget):
     def doNothing(self, button):
         print('Not implemented yet!')
 
+    def bluetoothMenu(self, button):
+        pop_up = BluetoothMenu(cfg.main_window)
+        pop_up.exec()
+        button.setFocus()
+
     def updateMenu(self, button):
         pop_up = UpdateMenu(cfg.main_window)
         pop_up.exec()
@@ -50,56 +56,38 @@ class SettingsWidget(QWidget):
     def getButtons(self):
         return self.buttons
 
-class PopUp(QWidget):
-    def __init__(self, parent, text, buttons):
-        super().__init__(parent)
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setAttribute(Qt.WA_StyledBackground)
-        self.setAutoFillBackground(True)
+class BluetoothMenu(PopUp):
+    def __init__(self, parent):
+        self.width = int(cfg.main_window.width / 3.5)
 
-        # create container for pop up
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0,0,0,0)
-        layout.setSpacing(0)
-        self.container = QWidget(autoFillBackground=True, objectName='container')
-        layout.addWidget(self.container, alignment=Qt.AlignCenter)
-        self.container.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(0,0,0,0)
+        content_layout.setSpacing(0)
+        out = subprocess.check_output(['bluetoothctl', 'devices']).decode().split('\n')
+        #self.devices = {}
+        pos = -1
+        for device in out:
+            if device == '': continue
+            d = device.partition(' ')[2]
+            mac, _, name = d.partition(' ')
+            #self.devices[name] = mac
 
-        # create layout for content
-        layout = QVBoxLayout(self.container)
-        layout.setContentsMargins(0,0,0,0)
-        width = int(cfg.main_window.width / 3.5)
+            button = DialogButton(name, self.width, 60, pos, 'ok', 'left')
+            button.clicked.connect(partial(self.connect, mac))
+            content_layout.addWidget(button)
+            if pos < 0:
+                self.focus = button
+                pos = 0
 
-        # create text
-        text_container = QWidget()
-        text_container.setFixedWidth(width)
-        text_layout = QVBoxLayout(text_container)
-        text_layout.setContentsMargins(35,35,35,30)
-        text.setWordWrap(True)
-        font = QFont('SansSerif', 20)
-        text.setFont(font)
-        text_layout.addWidget(text)
-        layout.addWidget(text_container)
+        self.cancel = DialogButton('Cancel', self.width, 60, 1, 'cancel')
+        self.cancel.clicked.connect(self.close)
+        buttons = [self.cancel]
 
-        # create button layout and add buttons
-        button_box = QWidget()
-        self.button_layout = QHBoxLayout(button_box)
-        self.button_layout.setContentsMargins(0,0,0,0)
-        self.button_layout.setSpacing(0)
-        for button in buttons:
-            self.button_layout.addWidget(button)
-        layout.addWidget(button_box)
+        super().__init__(parent, buttons, content=content_layout)
+        self.focus.setFocus()
 
-        self.loop = QEventLoop(self)
-
-    def showEvent(self, event):
-        self.setGeometry(self.parent().rect())
-
-    def exec(self):
-        self.show()
-        self.raise_()
-        self.loop.exec_()
-        self.hide()
+    def connect(self, mac):
+        subprocess.run(['bluetoothctl', 'connect', mac])
 
 class UpdateMenu(PopUp):
     def __init__(self, parent):
@@ -112,12 +100,12 @@ class UpdateMenu(PopUp):
         self.yes.clicked.connect(self.check_updates)
         buttons = [self.cancel, self.yes]
 
-        super().__init__(parent, self.title, buttons)
+        super().__init__(parent, buttons, text=self.title)
         self.cancel.setFocus()
 
     def check_updates(self):
         try:
-            subprocess.check_output(['pamac', 'checkupdates'])
+            subprocess.run(['pamac', 'checkupdates'])
             updates = False
         except subprocess.CalledProcessError as e:
             out = e.output.decode('utf-8')
@@ -143,9 +131,6 @@ class UpdateMenu(PopUp):
         else:
             self.ok_button()
 
-    def close(self):
-        self.loop.quit()
-
     def ok_button(self, funct=None):
         self.button_layout.removeWidget(self.cancel)
         self.cancel.deleteLater()
@@ -158,6 +143,7 @@ class UpdateMenu(PopUp):
             self.yes.clicked.connect(funct)
         else:
             self.yes.clicked.connect(self.close)
+        self.yes.pos = 2
 
 class PowerMenu(PopUp):
     def __init__(self, parent):
@@ -172,11 +158,8 @@ class PowerMenu(PopUp):
         shutdown.clicked.connect(self.shutdown)
         buttons = [cancel, reboot, shutdown]
 
-        super().__init__(parent, title, buttons)
+        super().__init__(parent, buttons, text=title)
         cancel.setFocus()
-
-    def close(self):
-        self.loop.quit()
 
     def reboot(self):
         if not cfg.DEV_MODE:

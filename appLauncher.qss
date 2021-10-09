@@ -33,14 +33,17 @@ DialogButton {
   background: none;
   border-radius: 8;
   color: rgb(240, 240, 240);
+  padding: 0 20px 0 20px;
 }
 
 DialogButton:focus {
   border: 4px solid rgb(100, 200, 255);
+  padding: 0 16px 0 16px;
 }
 
 DialogButton:pressed {
   border: 4px solid white;
+  padding: 0 16px 0 16px;
 }
 
 PopUp {

@@ -30,7 +30,7 @@ class IconButton(QPushButton):
             print('Press 2')
         elif (event.key() == Qt.Key_Left or event.key() == Qt.Key_Right or
               event.key() == Qt.Key_Up   or event.key() == Qt.Key_Down):
-            playsound('sounds/switch.mp3')
+            #playsound('sounds/switch.mp3')
             self.keyPressFunc(event, self.row, self.index)
 
 class AppButton(IconButton):
@@ -43,26 +43,27 @@ class SettingButton(IconButton):
         self.setStyleSheet(f"border-radius: {int(size/2)};")
 
 class DialogButton(QPushButton):
-    def __init__(self, text, width, height, pos, sound):
+    def __init__(self, text, width, height, pos, sound, align='center'):
         super().__init__(text)
         self.setFixedSize(QSize(width, height))
         font = QFont('SansSerif', 16)
         self.setFont(font)
-        # pos: -1 left most, 1 right most, 0 otherwise
+        # pos: -1 left most, 1 right most, 0 otherwise, 2 can't move at all
         self.pos = pos
         self.height = height
         self.sound = sound
+        self.setStyleSheet("QPushButton { text-align: "+align+"; }")
 
     def setWidth(self, width):
         self.setFixedSize(QSize(width, self.height))
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Left or event.key() == Qt.Key_Right:
-            playsound('sounds/switch.mp3')
+        #if event.key() == Qt.Key_Left or event.key() == Qt.Key_Right:
+            #playsound('sounds/switch.mp3')
         #elif event.key() == Qt.Key_Space:
             #playsound('sounds/'+self.sound+'.mp3')
 
-        if (event.key() == Qt.Key_Space or
-            event.key() == Qt.Key_Left  and self.pos != -1 or
-            event.key() == Qt.Key_Right and self.pos != 1):
+        if (event.key() == Qt.Key_Space or self.pos != 2 and
+            (event.key() == Qt.Key_Left  and self.pos != -1 or
+            event.key() == Qt.Key_Right and self.pos != 1)):
             super().keyPressEvent(event)
