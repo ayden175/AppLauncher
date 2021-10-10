@@ -96,7 +96,7 @@ class AppLauncherWindow(QMainWindow):
         apps = [
             ('img/youtube.png', 'YouTube', ['firefox', '--kiosk', 'www.youtube.com/tv']),
             ('img/viki.png', 'Viki', ['firefox', '--kiosk', 'www.viki.com']),
-            ('img/dummy.jpg', 'Empty', None),
+            ('img/steam.png', 'Steam', ['steam', '-tenfoot']),
             ('img/dummy.jpg', 'Empty', None),
             ('img/dummy.jpg', 'Empty', None),
             ('img/dummy.jpg', 'Empty', None)
