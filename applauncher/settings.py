@@ -1,13 +1,14 @@
 import sys
 import os
+import select
 from functools import partial
 import subprocess
 
 from PyQt5.QtCore import QSize, Qt, QEventLoop, QPoint
-from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QSizePolicy, QFrame, qApp
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QSizePolicy, QFrame, qApp, QScrollArea, QFrame
 from PyQt5.QtGui import QPixmap, QIcon, QFont
 
-from .button import SettingButton, DialogButton
+from .button import SettingButton, DialogButton, WrappedLabel
 from .popup import PopUp
 import applauncher.config as cfg
 
@@ -60,34 +61,74 @@ class BluetoothMenu(PopUp):
     def __init__(self, parent):
         self.width = int(cfg.main_window.width / 3.5)
 
-        content_layout = QVBoxLayout()
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0,0,0,0)
+        scroll = QScrollArea()
+        window = QWidget(autoFillBackground=True, objectName='container')
+        content_layout = QVBoxLayout(window)
         content_layout.setContentsMargins(0,0,0,0)
         content_layout.setSpacing(0)
+
         out = subprocess.check_output(['bluetoothctl', 'devices']).decode().split('\n')
-        #self.devices = {}
+        font = QFont('SansSerif', 18)
+        content_layout.addWidget(WrappedLabel('Paired devices', font=font))
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        content_layout.addWidget(line)
+        paired = QWidget()
+        self.paired_layout = QVBoxLayout(paired)
+        self.paired_layout.setContentsMargins(0,0,0,0)
+        self.paired_layout.setSpacing(0)
         pos = -1
         for device in out:
             if device == '': continue
             d = device.partition(' ')[2]
             mac, _, name = d.partition(' ')
-            #self.devices[name] = mac
 
             button = DialogButton(name, self.width, 60, pos, 'ok', 'left')
             button.clicked.connect(partial(self.connect, mac))
-            content_layout.addWidget(button)
+            self.paired_layout.addWidget(button)
             if pos < 0:
                 self.focus = button
                 pos = 0
+        content_layout.addWidget(paired)
+
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        content_layout.addWidget(line)
+        #content_layout.addWidget(WrappedLabel('Available devices', font=font))
+
+        #timer = QTimer(self)
+        #timer.timeout.connect(self.scanDevices)
+        #timer.start(1000)
+
+        scroll.setWidget(window)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        layout.addWidget(scroll)
 
         self.cancel = DialogButton('Cancel', self.width, 60, 1, 'cancel')
         self.cancel.clicked.connect(self.close)
         buttons = [self.cancel]
 
-        super().__init__(parent, buttons, content=content_layout)
+        super().__init__(parent, buttons, content=layout)
         self.focus.setFocus()
 
     def connect(self, mac):
         subprocess.run(['bluetoothctl', 'connect', mac])
+
+    # TODO: fix me! Does not print lines as received by the running process
+    def scanDevices(self):
+        p = subprocess.Popen(['bluetoothctl', 'scan', 'on'], stdout=subprocess.PIPE, bufsize=1, universal_newlines=True)
+        for line in iter(p.stdout.readline,''):
+           print(line.rstrip())
+
+        # https://unix.stackexchange.com/questions/551514/list-nearby-bluetooth-devices-on-raspberry-pi
+
+        # bluetoothctl scan on
+
+        # sudo tshark -i bluetooth0 -Y "(bthci_evt.code == 0x2f) || (bthci_evt.le_meta_subevent == 0x2 && btcommon.eir_ad.entry.device_name != '')" -T fields -e bthci_evt.bd_addr -e btcommon.eir_ad.entry.device_name
+
 
 class UpdateMenu(PopUp):
     def __init__(self, parent):

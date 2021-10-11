@@ -50,6 +50,6 @@ PopUp {
   background: rgba(0, 0, 3, 235);
 }
 
-QWidget#container, QWidget#container > QWidget{
+QWidget#container, QWidget#container > QWidget {
   background: rgb(55, 55, 55);
 }

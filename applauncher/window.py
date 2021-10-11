@@ -72,7 +72,6 @@ class AppLauncherWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 50)
         font = QFont('SansSerif', 50)
         self.clock = QLabel()
-        self.clock.setStyleSheet("color: rgb(240, 240, 240);")
         self.clock.setAlignment(Qt.AlignCenter)
         self.clock.setFont(font)
         layout.addWidget(self.clock)
@@ -95,6 +94,7 @@ class AppLauncherWindow(QMainWindow):
 
         apps = [
             ('img/youtube.png', 'YouTube', ['firefox', '--kiosk', 'www.youtube.com/tv']),
+            ('img/twitch.png', 'Twitch', ['firefox', '--kiosk', 'www.twitch.com']),
             ('img/viki.png', 'Viki', ['firefox', '--kiosk', 'www.viki.com']),
             ('img/steam.png', 'Steam', ['steam', '-tenfoot']),
             ('img/dummy.jpg', 'Empty', None),

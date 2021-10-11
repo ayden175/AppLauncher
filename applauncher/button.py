@@ -1,7 +1,7 @@
 from playsound import playsound
 
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QPushButton, QWidget, QLabel, QVBoxLayout
 from PyQt5.QtGui import QPixmap, QIcon, QFont
 
 import applauncher.config as cfg
@@ -67,3 +67,11 @@ class DialogButton(QPushButton):
             (event.key() == Qt.Key_Left  and self.pos != -1 or
             event.key() == Qt.Key_Right and self.pos != 1)):
             super().keyPressEvent(event)
+
+class WrappedLabel(QWidget):
+    def __init__(self, text='', font=None):
+        super().__init__()
+        wrapped_label = QLabel(text, font=font)
+        wrapped_layout = QVBoxLayout(self)
+        wrapped_layout.addWidget(wrapped_label)
+        self.setStyleSheet('QWidget { padding-top: 15px; padding-left: 10px; padding-bottom: 5px; }')
